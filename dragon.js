@@ -26,6 +26,22 @@ var eveRule = [
   }
 ];
 
+var kochRule = [
+  {
+    start: { x: 0, y: 0 },
+    end: { x: 100, y: 0 }
+  },{
+    start: { x: 100, y: 0 },
+    end: { x: 150, y: -100*Math.sin(Math.PI/3) }
+  },{
+    start: { x: 150, y: -100*Math.sin(Math.PI/3) },
+    end: { x: 200, y: 0 }
+  },{
+    start: { x: 200, y: 0 },
+    end: { x: 300, y: 0 }
+  }
+];
+
 var transforms = rule.map(ruleToTransform);
 
 var lines = [initial];
