@@ -4,17 +4,50 @@ var initial = {
 };
 
 var rule = [
-  { x: 0, y: 0 }, { x: 0.5, y: 0.5 },
-  { x: 1, y: 0 }, { x: 0.5, y: 0.5 }
+  {
+    start: { x: 0, y: 0 },
+    end: { x: 150, y: -150 }
+  },{
+    start: { x: 300, y: 0 },
+    end: { x: 150, y: -150 }
+  }
 ];
 
-// rules can be represented by matrices!  scale, rotate, translate!
-// so, first rule is rotate 45deg, don't translate, scale by sqrt(1/8)
-// second rule is rotate 135deg, translate x+1, scale by sqrt(1/8)
-//
-//
+var eveRule = [
+  {
+    start: { x: 0, y: 0 },
+    end: { x: 0, y: -150 }
+  },{
+    start: { x: 0, y: -150 },
+    end: { x: 150, y: 0 }
+  },{
+    start: { x: 300, y: 0 },
+    end: { x: 150, y: 0 }
+  }
+];
+
+var transforms = rule.map(ruleToTransform);
 
 var lines = [initial];
+
+// KK, plans:
+// - curvy rendering so the path is more apparent
+// - interactive rule editor
+//   - optional grid snapping
+//   - grid always shows (so they know its edit mode)
+//   - make them click-drag to draw new lines WITH A DIRECTION
+//   - direction of original line is indicated by gradient, mayhaps
+//   - might need a way to fix particular angles? eh, maybe just a text input that lets
+//     you add lines and specify start/end points for them.  let them do the math themselves.
+//     it's for power users.
+// - d3 animation stuff maybe?  if not the "stretch from original line" type thing
+//   that dragon of eve does, then maybe like fade in as red, then fade to white while
+//   original fades to nothingness
+//
+// k, rules will look like they do above, and executed like this:
+// 1) modify coordinate frame so line goes (0,0) -> (0,100)
+// 2) draw in "rule lines" in this new frame
+// 3) that's it.
 
 var selector = '#draw-here',
     element = d3.select(selector);
@@ -27,63 +60,79 @@ var svg = element.append('svg')
 var thing = svg.append('g')
     .attr('transform', 'translate(150, 300)');
 
-function simpleClone(obj) {
-  if (typeof obj !== 'object') return obj;
-  var newObj = {};
-  for (var key in obj) newObj[key] = simpleClone(obj[key]);
-  return newObj;
+// mat:
+// [[A, B, C],
+//  [D, E, F],
+//  [G, H, I]]
+// vec:
+//  [x,
+//   y,
+//   z]
+function matrixMult(m1, m2) {
+  var res = [];
+  var m2Cols = transverse(m2);
+  res[0] = matrixVecMult(m1, m2Cols[0]);
+  res[1] = matrixVecMult(m1, m2Cols[1]);
+  res[2] = matrixVecMult(m1, m2Cols[2]);
+  return transverse(res);
+}
+
+function transverse(m) {
+  return [[m[0][0], m[1][0], m[2][0]],
+          [m[0][1], m[1][1], m[2][1]],
+          [m[0][2], m[1][2], m[2][2]]];
+}
+
+function matrixVecMult(m, v) {
+  return [m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2],
+          m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2],
+          m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2]];
+}
+
+function angleOf(line) {
+  var dx = line.end.x - line.start.x,
+      dy = line.end.y - line.start.y;
+  return Math.atan2(dy, dx);
+}
+
+function ruleToTransform(rule) {
+  // what's its length compared to initial -- that's Scale
+  // where is start compared to initial (0,0) -- that's Translate
+  // how does it point compared to initial (0rad) -- that's Rotate
+  // then do T*S*R
+  var s = length(rule) / length(initial),
+      S = [[s, 0, 0],
+           [0, s, 0],
+           [0, 0, 1]],
+      r = angleOf(rule),
+      R = [[Math.cos(r), -Math.sin(r), 0],
+           [Math.sin(r),  Math.cos(r), 0],
+           [0,            0,           1]],
+      dx = rule.start.x - initial.start.x,
+      dy = rule.start.y - initial.start.y,
+      T = [[1, 0, dx],
+           [0, 1, dy],
+           [0, 0, 1]];
+  return matrixMult(T, matrixMult(S, R));
+}
+
+function transform(line, matrix) {
+  var start = matrixVecMult(matrix, [line.start.x, line.start.y, 1]),
+      end = matrixVecMult(matrix, [line.end.x, line.end.y, 1]);
+  return {
+    start: { x: start[0], y: start[1] },
+    end: { x: end[0], y: end[1] }
+  };
+}
+
+function applyRules(line) {
+  return transforms.map(function(xform) {
+    return transform(line, xform);
+  });
 }
 
 function length(line) {
   return Math.sqrt(Math.pow(line.end.x - line.start.x, 2) + Math.pow(line.end.y - line.start.y, 2));
-}
-
-function scale(line, factor) {
-  // assuming line.start shouldn't move
-  var xLen = line.end.x - line.start.x;
-  var yLen = line.end.y - line.start.y;
-  line.end.x = line.start.x + xLen * factor;
-  line.end.y = line.start.y + yLen * factor;
-}
-
-function rotate(line, deg) {
-  // rotate about its starting point, CCW
-  var rad = -deg * Math.PI / 180;
-  var vx = line.end.x - line.start.x,
-      vy = line.end.y - line.start.y;
-  var A = Math.cos(rad), B = -Math.sin(rad),
-      C = Math.sin(rad), D = Math.cos(rad);
-  var vx1 = A*vx + B*vy,
-      vy1 = C*vx + D*vy;
-  line.end.x = line.start.x + vx1;
-  line.end.y = line.start.y + vy1;
-}
-
-function translate(line, tangent) {
-  // translate along direction (tangent) of line
-  var dx = line.end.x - line.start.x,
-      dy = line.end.y - line.start.y,
-      len = length(line);
-  var ux = dx / len,
-      uy = dy / len;
-  dx = ux * tangent;
-  dy = uy * tangent;
-  line.start.x += dx;
-  line.start.y += dy;
-  line.end.x += dx;
-  line.end.y += dy;
-}
-
-function applyRule(line) {
-  var newLine1 = simpleClone(line);
-  var newLine2 = simpleClone(line);
-  var scaleFactor = Math.sqrt(0.5);
-  scale(newLine1, scaleFactor);
-  rotate(newLine1, 45);
-  scale(newLine2, scaleFactor);
-  translate(newLine2, length(line));
-  rotate(newLine2, 135);
-  return [newLine1, newLine2];
 }
 
 function render() {
@@ -102,17 +151,9 @@ function render() {
 
 render();
 
-// thing.append('line')
-//     .attr('x1', 0)
-//     .attr('y1', 0)
-//     .attr('x2', 100)
-//     .attr('y2', 0)
-//     .attr('transform', 'translate(10 10) rotate(30)')
-//     .attr('stroke', '#fff');
-
 function iterate() {
   var newLines = lines.reduce(function(result, line) {
-    applyRule(line).forEach(function(l) { result.push(l); });
+    applyRules(line).forEach(function(l) { result.push(l); });
     return result;
   }, []);
   lines = newLines;
