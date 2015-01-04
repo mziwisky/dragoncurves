@@ -26,6 +26,38 @@ var eveRule = [
   }
 ];
 
+var terDragonRule = [
+  {
+    start: { x: 0, y: 0 },
+    end: { x: 150, y: -150*Math.tan(Math.PI/6) }
+  },{
+    start: { x: 150, y: -150*Math.tan(Math.PI/6) },
+    end: { x: 150, y: 150*Math.tan(Math.PI/6) }
+  },{
+    start: { x: 150, y: 150*Math.tan(Math.PI/6) },
+    end: { x: 300, y: 0 }
+  }
+];
+
+// goldenDragon calculations based on http://ecademy.agnesscott.edu/~lriddle/ifs/heighway/goldenDragon.htm
+var goldenRatio = (1 + Math.sqrt(5)) / 2,
+    gdR = Math.pow(1/goldenRatio, 1/goldenRatio),
+    gdR2 = Math.pow(gdR, 2),
+    gdA = length(initial),
+    gdB = gdR * gdA,
+    gdC = gdR2 * gdA,
+    gdX = (Math.pow(gdA,2) + Math.pow(gdB,2) - Math.pow(gdC, 2)) / (2*gdA),
+    gdY = Math.sqrt(Math.pow(gdB,2) - Math.pow(gdX,2)),
+    goldenDragonRule = [
+  {
+    start: { x: 0, y: 0 },
+    end: { x: gdX, y: -gdY }
+  },{
+    start: { x: 300, y: 0 },
+    end: { x: gdX, y: -gdY }
+  }
+];
+
 var kochRule = [
   {
     start: { x: 0, y: 0 },
@@ -42,7 +74,7 @@ var kochRule = [
   }
 ];
 
-var transforms = rule.map(ruleToTransform);
+var transforms = goldenDragonRule.map(ruleToTransform);
 
 var lines = [initial];
 
