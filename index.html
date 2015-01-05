@@ -14,6 +14,9 @@
     a:link, a:visited {
       color: #595;
     }
+    .plug, .instructions {
+      color: #aa1;
+    }
     .container {
       width: 800px;
       display: block;
@@ -21,14 +24,15 @@
       margin-right: auto;
     }
     #draw-here {
-      float: left;
+      display: inline-block;
+      vertical-align: top;
       margin: 5px;
       width: 550px;
       height: 500px;
     }
     #samples {
-      float: left;
-      /* margin: 5px; */
+      display: inline-block;
+      vertical-align: top;
     }
     .sample {
       padding: 5px;
@@ -46,18 +50,25 @@
 </head>
 <body>
   <div class='container'>
-    <p>Dragon curves are a family of fractal curves. By iterating a simple
-    substitution rule over and over, complex and interesting patterns emerge.
-    More info can be found on <a
-      href='http://en.wikipedia.org/wiki/Dragon_curve'>Wikipedia</a>.</p> <p>This
-    page is a work in progress. Note that generating a curve of more than
-    10-15 iterations will be hard on your computer, and may crash your
-    browser.</p>
-    <p>Click inside the large box below to perform one iteration. Click any of
-    the generation rules to the right to reset the large box with that rule.</p>
+    <div>
+      <p>Dragon curves are a family of fractal curves. By iterating a simple
+      substitution rule over and over, complex and interesting patterns emerge.
+      More info can be found on <a
+        href='http://en.wikipedia.org/wiki/Dragon_curve'>Wikipedia</a>.</p> <p>This
+      page is a work in progress. Note that generating a curve of more than
+      10-15 iterations will be hard on your computer, and may crash your
+      browser.</p>
+      <p class='instructions'>Click inside the canvas on the left to perform one
+      iteration.<br>
+      Click any of the generation rules to the right to reset the
+      canvas with that rule.</p>
+    </div>
     <div>
       <div id='draw-here'></div>
       <div id='samples'></div>
+    </div>
+    <div>
+      <p class='plug'>Made by <a href='https://www.github.com/mziwisky'>Mike Ziwisky</a> during a dragon curve obsession</p>
     </div>
   </div>
 
