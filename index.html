@@ -6,11 +6,61 @@
     }
     svg {
       background: #121;
+      cursor: pointer;
+    }
+    p {
+      color: #bbb;
+    }
+    a:link, a:visited {
+      color: #595;
+    }
+    .container {
+      width: 800px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #draw-here {
+      float: left;
+      margin: 5px;
+      width: 550px;
+      height: 500px;
+    }
+    #samples {
+      float: left;
+      /* margin: 5px; */
+    }
+    .sample {
+      padding: 5px;
+    }
+    .sample-svg {
+      fill: #252;
+      text-anchor: end;
+      width: 200px;
+      height: 85px;
+    }
+    .sample-svg--hovered {
+      fill: #5f5;
     }
   </style>
 </head>
 <body>
-  <div id='draw-here'></div>
+  <div class='container'>
+    <p>Dragon curves are a family of fractal curves. By iterating a simple
+    substitution rule over and over, complex and interesting patterns emerge.
+    More info can be found on <a
+      href='http://en.wikipedia.org/wiki/Dragon_curve'>Wikipedia</a>.</p> <p>This
+    page is a work in progress. Note that generating a curve of more than
+    10-15 iterations will be hard on your computer, and may crash your
+    browser.</p>
+    <p>Click inside the large box below to perform one iteration. Click any of
+    the generation rules to the right to reset the large box with that rule.</p>
+    <div>
+      <div id='draw-here'></div>
+      <div id='samples'></div>
+    </div>
+  </div>
+
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src='dragon.js'></script>
 </body>
